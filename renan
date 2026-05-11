@@ -1,0 +1,461 @@
+local players = game:GetService("Players")
+local localPlayer = players.LocalPlayer
+local runService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+
+-- SISTEMA DE KEY PERSONALIZADO (AMARELO)
+local correctKey = "keyteste"
+local unlocked = false
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GokuHubKey"
+screenGui.Parent = game.CoreGui
+
+local frame = Instance.new("Frame")
+frame.Parent = screenGui
+frame.Size = UDim2.fromScale(0.35, 0.32)
+frame.Position = UDim2.fromScale(0.5, 0.5)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.BackgroundColor3 = Color3.fromRGB(130, 110, 10)
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
+
+local stroke = Instance.new("UIStroke")
+stroke.Parent = frame
+stroke.Color = Color3.fromRGB(255, 215, 0)
+stroke.Thickness = 1.5
+
+local title = Instance.new("TextLabel")
+title.Parent = frame
+title.Size = UDim2.fromScale(1, 0.2)
+title.BackgroundTransparency = 1
+title.Text = "Goku Hub"
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.TextColor3 = Color3.new(1, 1, 1)
+
+local line = Instance.new("Frame")
+line.Parent = frame
+line.Size = UDim2.fromScale(0.8, 0.006)
+line.Position = UDim2.fromScale(0.1, 0.22)
+line.BackgroundColor3 = Color3.fromRGB(255, 230, 0)
+line.BorderSizePixel = 0
+
+local mainText = Instance.new("TextLabel")
+mainText.Parent = frame
+mainText.Position = UDim2.fromScale(0, 0.26)
+mainText.Size = UDim2.fromScale(1, 0.15)
+mainText.BackgroundTransparency = 1
+mainText.Text = "Sistema de Chaves (Key System)"
+mainText.Font = Enum.Font.Gotham
+mainText.TextScaled = true
+mainText.TextColor3 = Color3.new(1, 1, 1)
+
+local subText = Instance.new("TextLabel")
+subText.Parent = frame
+subText.Position = UDim2.fromScale(0, 0.38)
+subText.Size = UDim2.fromScale(1, 0.12)
+subText.BackgroundTransparency = 1
+subText.Text = "Insira a sua chave de acesso abaixo para continuar.\nby Renan"
+subText.Font = Enum.Font.Gotham
+subText.TextScaled = true
+subText.TextColor3 = Color3.fromRGB(230, 230, 230)
+
+local textBox = Instance.new("TextBox")
+textBox.Parent = frame
+textBox.Position = UDim2.fromScale(0.15, 0.54)
+textBox.Size = UDim2.fromScale(0.7, 0.13)
+textBox.PlaceholderText = "Coloque sua chave…"
+textBox.Text = ""
+textBox.BackgroundColor3 = Color3.fromRGB(60, 50, 0)
+textBox.TextColor3 = Color3.new(1, 1, 1)
+textBox.Font = Enum.Font.Gotham
+textBox.TextScaled = true
+Instance.new("UICorner", textBox).CornerRadius = UDim.new(0, 10)
+
+local confirm = Instance.new("TextButton")
+confirm.Parent = frame
+confirm.Position = UDim2.fromScale(0.3, 0.72)
+confirm.Size = UDim2.fromScale(0.4, 0.15)
+confirm.Text = "CONFIRMAR"
+confirm.Font = Enum.Font.GothamBold
+confirm.TextScaled = true
+confirm.TextColor3 = Color3.fromRGB(0, 0, 0)
+confirm.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+Instance.new("UICorner", confirm).CornerRadius = UDim.new(0, 10)
+
+confirm.MouseButton1Click:Connect(function()
+	if textBox.Text == correctKey then
+		unlocked = true
+		screenGui:Destroy()
+	end
+end)
+
+repeat task.wait() until unlocked
+
+-- CARREGAMENTO DO SCRIPT PRINCIPAL
+local rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local window = rayfield:CreateWindow({
+   Name = "Goku Hub | by Renan",
+   LoadingTitle = "Goku Hub",
+   LoadingSubtitle = "by Renan",
+   ConfigurationSaving = {Enabled = true, FolderName = "GokuHubConfig", FileName = "BloxFruits"},
+   KeySystem = false
+})
+
+-- VARIAVEIS AUXILIARES
+local AimConfig = {
+    Aimbot = false,
+    FovRadius = 150,
+    MaxDistance = 500,
+    EspBoxes = false,
+    EspDistanceLine = false,
+    Prediction = 0.165,
+    Spinbot = false
+}
+
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 1.5
+FOVCircle.NumSides = 64
+FOVCircle.Filled = false
+FOVCircle.Transparency = 1
+FOVCircle.Color = Color3.fromRGB(255, 0, 0)
+FOVCircle.Visible = false
+
+-- TAB 1: Servidor
+local tab1 = window:CreateTab("Servidor 🌐", 4483362458)
+tab1:CreateButton({
+   Name = "Server Hop 🔀",
+   Callback = function()
+      local tps = game:GetService("TeleportService")
+      local api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+      local data = game:GetService("HttpService"):JSONDecode(game:HttpGet(api))
+      for _, s in pairs(data.data) do if s.playing < s.maxPlayers and s.id ~= game.JobId then tps:TeleportToPlaceInstance(game.PlaceId, s.id) break end end
+   end,
+})
+tab1:CreateButton({ Name = "Rejoin Server 🔁", Callback = function() game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId) end })
+
+local antiAfkEnabled = false
+tab1:CreateToggle({
+   Name = "Ant Afk 👾",
+   CurrentValue = false,
+   Callback = function(value)
+      antiAfkEnabled = value
+      task.spawn(function()
+         while antiAfkEnabled do
+            local virtualUser = game:GetService("VirtualUser")
+            virtualUser:CaptureController()
+            virtualUser:ClickButton2(Vector2.new())
+            task.wait(math.random(60, 150))
+         end
+      end)
+   end,
+})
+
+-- TAB 2: Esp Fruit/players
+local tab2 = window:CreateTab("Esp Fruit/players", 4483362458)
+local function applyESP(parent, text, color, outline, size, showOutline)
+    if parent:FindFirstChild("GokuVisual") then parent.GokuVisual:Destroy() end
+    local billboard = Instance.new("BillboardGui", parent)
+    billboard.Name = "GokuVisual"
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.AlwaysOnTop = true
+    billboard.ExtentsOffset = Vector3.new(0, 3, 0)
+    local label = Instance.new("TextLabel", billboard)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = color
+    label.TextStrokeColor3 = outline
+    label.TextStrokeTransparency = showOutline and 0 or 1
+    label.TextSize = size or 11
+    label.Text = text
+    label.Font = Enum.Font.GothamBold
+    return label
+end
+
+_G.playerESP = false
+tab2:CreateToggle({
+   Name = "Esp player 📌",
+   CurrentValue = false,
+   Callback = function(value)
+      _G.playerESP = value
+      if not value then
+         for _, p in pairs(game.Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+               if p.Character.HumanoidRootPart:FindFirstChild("GokuVisual") then
+                  p.Character.HumanoidRootPart.GokuVisual:Destroy()
+               end
+            end
+         end
+      else
+         task.spawn(function()
+            while _G.playerESP do
+               for _, p in pairs(game.Players:GetPlayers()) do
+                  if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                     local hrp = p.Character.HumanoidRootPart
+                     local dist = math.floor((localPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
+                     local label = hrp:FindFirstChild("GokuVisual") and hrp.GokuVisual.TextLabel or applyESP(hrp, "", Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 255, 255), 11, true)
+                     label.Text = p.Name .. " [" .. dist .. "m]"
+                  end
+               end
+               task.wait(0.5)
+            end
+         end)
+      end
+   end,
+})
+
+_G.fruitESP = false
+tab2:CreateToggle({
+   Name = "Esp Fruit 🍎",
+   CurrentValue = false,
+   Callback = function(value)
+      _G.fruitESP = value
+      if not value then
+         for _, v in pairs(game.Workspace:GetChildren()) do
+            local handle = v:FindFirstChild("Handle") or v:FindFirstChild("PrimaryPart")
+            if handle and handle:FindFirstChild("GokuVisual") then handle.GokuVisual:Destroy() end
+         end
+      else
+         task.spawn(function()
+            while _G.fruitESP do
+               for _, v in pairs(game.Workspace:GetChildren()) do
+                  if v:IsA("Tool") or (v:IsA("Model") and string.find(v.Name, "Fruit")) then
+                     local handle = v:FindFirstChild("Handle") or v.PrimaryPart
+                     if handle then
+                        local dist = math.floor((localPlayer.Character.HumanoidRootPart.Position - handle.Position).Magnitude)
+                        local label = handle:FindFirstChild("GokuVisual") and handle.GokuVisual.TextLabel or applyESP(handle, "", Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0), 14, true)
+                        label.Text = v.Name .. " [" .. dist .. "m]"
+                     end
+                  end
+               end
+               task.wait(1)
+            end
+         end)
+      end
+   end,
+})
+
+tab2:CreateToggle({
+   Name = "Girar Fruta 🔄🍈",
+   CurrentValue = false,
+   Callback = function(value)
+      if value then
+         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Cousin","Buy")
+         task.wait(0.5)
+         rayfield:Notify({Title = "Goku Hub", Content = "Giro realizado.", Duration = 3})
+      end
+   end,
+})
+
+tab2:CreateToggle({
+   Name = "Auto Collet Fruit 🚪",
+   CurrentValue = false,
+   Callback = function(value)
+      if value then
+         local root = localPlayer.Character.HumanoidRootPart
+         local originalPos = root.CFrame
+         for _, v in pairs(game.Workspace:GetChildren()) do
+            if v:IsA("Tool") or (v:IsA("Model") and string.find(v.Name, "Fruit")) then
+                local handle = v:FindFirstChild("Handle") or v.PrimaryPart
+                if handle then
+                    root.CFrame = handle.CFrame
+                    task.wait(0.3)
+                end
+            end
+         end
+         root.CFrame = originalPos
+      end
+   end,
+})
+
+-- TAB 3: Configurações
+local tab3 = window:CreateTab("Configurações ⚙️", 4483362458)
+tab3:CreateToggle({ Name = "Ant Ban", CurrentValue = false, Callback = function(value) _G.antiBan = value end })
+local water
+tab3:CreateToggle({
+	Name = "Walk on Water 🌊",
+	CurrentValue = false,
+	Callback = function(v)
+		if v then
+			water = Instance.new("Part", workspace)
+			water.Anchored = true; water.CanCollide = true; water.Transparency = 1; water.Size = Vector3.new(5000,1,5000)
+			runService.RenderStepped:Connect(function()
+				if water and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+					water.Position = Vector3.new(localPlayer.Character.HumanoidRootPart.Position.X, 0, localPlayer.Character.HumanoidRootPart.Position.Z)
+				end
+			end)
+		else if water then water:Destroy(); water = nil end end
+	end
+})
+tab3:CreateToggle({
+   Name = "Gráfico Massinha 📺",
+   CurrentValue = false,
+   Callback = function(value)
+      if value then for _, v in pairs(game.Workspace:GetDescendants()) do if v:IsA("BasePart") then v.Material = Enum.Material.SmoothPlastic end end end
+   end,
+})
+
+-- TAB 4: AIMLOCK
+local tab4 = window:CreateTab("Aimlock 🎯", 4483362458)
+
+tab4:CreateToggle({
+   Name = "Aim Lock 🎯",
+   CurrentValue = false,
+   Callback = function(value)
+      AimConfig.Aimbot = value
+      FOVCircle.Visible = value
+   end,
+})
+
+-- SLIDER DE FOV (MAX 900)
+tab4:CreateSlider({
+   Name = "Tamanho do FOV ⭕",
+   Range = {0, 900},
+   Increment = 10,
+   Suffix = "px",
+   CurrentValue = 150,
+   Callback = function(Value)
+      AimConfig.FovRadius = Value
+      FOVCircle.Radius = Value
+   end,
+})
+
+tab4:CreateToggle({
+   Name = "Gira-Gira 🌀",
+   CurrentValue = false,
+   Callback = function(value)
+      AimConfig.Spinbot = value
+      task.spawn(function()
+         while AimConfig.Spinbot do
+            if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+               local hrp = localPlayer.Character.HumanoidRootPart
+               hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(60), 0)
+            end
+            runService.RenderStepped:Wait()
+         end
+      end)
+   end,
+})
+
+tab4:CreateToggle({
+   Name = "Esp Box 📦",
+   CurrentValue = false,
+   Callback = function(value) AimConfig.EspBoxes = value end,
+})
+
+tab4:CreateToggle({
+   Name = "Esp Distance Aimbot 📏🎯",
+   CurrentValue = false,
+   Callback = function(value) AimConfig.EspDistanceLine = value end,
+})
+
+tab4:CreateSlider({
+   Name = "Distância Máxima 📏",
+   Range = {0, 2000},
+   Increment = 50,
+   Suffix = "m",
+   CurrentValue = 500,
+   Callback = function(Value) AimConfig.MaxDistance = Value end,
+})
+
+-- LÓGICA VISUAL
+local function HandleVisuals(player)
+    local Box = Drawing.new("Square")
+    local LevelLabel = Drawing.new("Text")
+    local AimLine = Drawing.new("Line")
+
+    runService.RenderStepped:Connect(function()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            local RootPart = player.Character.HumanoidRootPart
+            local Pos, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
+            local Distance = (localPlayer.Character.HumanoidRootPart.Position - RootPart.Position).Magnitude
+            
+            local isTooHigh = RootPart.Position.Y > 500 
+
+            if OnScreen and Distance <= AimConfig.MaxDistance and not isTooHigh then
+                if AimConfig.EspBoxes then
+                    local SizeX = 2000 / Pos.Z
+                    local SizeY = 3000 / Pos.Z
+                    
+                    Box.Visible = true
+                    Box.Size = Vector2.new(SizeX, SizeY)
+                    Box.Position = Vector2.new(Pos.X - SizeX / 2, Pos.Y - SizeY / 2)
+                    Box.Color = Color3.fromRGB(255, 0, 0)
+                    Box.Thickness = 1
+                    Box.Filled = false
+
+                    local lvl = 0
+                    local data = player:FindFirstChild("Data") or player:FindFirstChild("leaderstats")
+                    if data then
+                        local lvlObj = data:FindFirstChild("Level") or data:FindFirstChild("lvl")
+                        if lvlObj then lvl = lvlObj.Value end
+                    end
+
+                    LevelLabel.Visible = true
+                    LevelLabel.Text = "(Level: " .. tostring(lvl) .. ")"
+                    LevelLabel.Size = 16
+                    LevelLabel.Center = true
+                    LevelLabel.Outline = true
+                    LevelLabel.Color = Color3.fromRGB(0, 0, 0)
+                    LevelLabel.Position = Vector2.new(Pos.X, Pos.Y - (SizeY / 2) - 20)
+                else 
+                    Box.Visible = false; LevelLabel.Visible = false
+                end
+
+                if AimConfig.EspDistanceLine then
+                    local SelfPos = Camera:WorldToViewportPoint(localPlayer.Character.HumanoidRootPart.Position)
+                    AimLine.Visible = true
+                    AimLine.From = Vector2.new(SelfPos.X, SelfPos.Y)
+                    AimLine.To = Vector2.new(Pos.X, Pos.Y)
+                    AimLine.Color = Color3.fromRGB(255, 0, 0)
+                    AimLine.Thickness = 1
+                else 
+                    AimLine.Visible = false 
+                end
+            else 
+                Box.Visible = false; LevelLabel.Visible = false; AimLine.Visible = false
+            end
+        else 
+            Box.Visible = false; LevelLabel.Visible = false; AimLine.Visible = false 
+        end
+    end)
+end
+
+for _, v in pairs(players:GetPlayers()) do if v ~= localPlayer then HandleVisuals(v) end end
+players.PlayerAdded:Connect(HandleVisuals)
+
+-- LOOP AIMBOT E FOV
+runService.RenderStepped:Connect(function()
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FOVCircle.Radius = AimConfig.FovRadius
+    
+    if FOVCircle.Visible then 
+        FOVCircle.Color = Color3.fromHSV(tick() % 5 / 5, 1, 1) 
+    end
+
+    if AimConfig.Aimbot then
+        local MousePos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        local Target = nil; local Shortest = math.huge
+        for _, v in pairs(players:GetPlayers()) do
+            if v ~= localPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character.Humanoid.Health > 0 then
+                local Pos, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                local DistMag = (localPlayer.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
+                
+                -- SÓ MIRA SE ESTIVER DENTRO DO CÍRCULO DO FOV (RAIO)
+                if OnScreen and DistMag <= AimConfig.MaxDistance then
+                    local ScreenDist = (Vector2.new(Pos.X, Pos.Y) - MousePos).Magnitude
+                    if ScreenDist <= AimConfig.FovRadius then
+                        if DistMag < Shortest then Shortest = DistMag; Target = v end
+                    end
+                end
+            end
+        end
+        if Target then
+            local Pred = Target.Character.HumanoidRootPart.Position + (Target.Character.HumanoidRootPart.Velocity * AimConfig.Prediction)
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Pred)
+        end
+    end
+end)
